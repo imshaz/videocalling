@@ -23,7 +23,8 @@ import AgoraRendererView from './components/AgoraRendererView'
 
 const agoraKitEmitter = new NativeEventEmitter(AgoraRtcEngine);
 var isSpeakerPhone = false;
-//provide this url if you want rtmp relevant features
+
+//no need for now
 var cdn_url = "YOUR_CDN_URL"
 
 export default class App extends Component {
@@ -36,6 +37,7 @@ export default class App extends Component {
 
   componentDidMount() {
     this.registerCallbacks();
+    //ADD Agora.io API KEY HERE
     AgoraRtcEngine.createEngine("58633e09ec674d3398f8108263db5683");
 
     AgoraRtcEngine.enableVideo();
@@ -54,7 +56,7 @@ export default class App extends Component {
     }
   }
 
-  // Agora Action 
+  // Agora Action
   _joinChannel() {
     AgoraRtcEngine.setLocalVideoView(this.viewRegistry["local"], AgoraRtcEngine.AgoraVideoRenderModeFit);
     AgoraRtcEngine.setChannelProfile(1);
