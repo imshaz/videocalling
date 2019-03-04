@@ -1,218 +1,74 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
+import React from 'react';
 
-import React, { Component } from 'react';
-import {
-  Platform,
-  Button,
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  findNodeHandle,
-  NativeEventEmitter,
-  NativeModules,
-  UIManager,
-  DeviceEventEmitter
-} from 'react-native';
-import AgoraRtcEngine from './components/AgoraRtcEngineModule'
-import AgoraRendererView from './components/AgoraRendererView'
+import { createStackNavigator, createAppContainer } from 'react-navigation'
+import Signup from './screens/signup'
+import Login from './screens/login'
+import Starting from './screens/starting'
+import SignupForm from './screens/signupForm'
+import LoggedInScreen from './screens/loggedIn'
+import Purchase from './screens/purchase'
+import VideoCalling from './screens/videoCalling'
 
-const agoraKitEmitter = new NativeEventEmitter(AgoraRtcEngine);
-var isSpeakerPhone = false;
-//provide this url if you want rtmp relevant features
-var cdn_url = "YOUR_CDN_URL"
+// import { Font } from 'expo';
+const RootStack = createStackNavigator(
+  {
+    StartingScreen:{
+      screen:Starting,
+    },
+    SignupScreen: {
+      screen: Signup,
 
-export default class App extends Component {
-  state = {
-    localStream: null,
-    remoteStreams: []
+    },
+    LoginScreen:{
+      screen:Login,
+    },
+    SignupFormScreen:{
+      screen:SignupForm,
+    },
+    LoggedInScreen:{
+      screen:LoggedInScreen,
+    },
+    PurchaseScreen:{
+      screen:Purchase,
+    },
+    VideoCallingScreen:{
+      screen:VideoCalling,
+    },
+  },
+  {
+    mode: 'modal',
+    // headerMode: 'none',
   }
-  viewRegistry = {}
-  listeners = []
+);
 
-  componentDidMount() {
-    this.registerCallbacks();
-    AgoraRtcEngine.createEngine("58633e09ec674d3398f8108263db5683");
+const AppContainer = createAppContainer(RootStack);
 
-    AgoraRtcEngine.enableVideo();
-    AgoraRtcEngine.enableAudio();
-    AgoraRtcEngine.setVideoProfileDetail(360, 640, 15, 300);
-  }
+export default class App extends React.Component {
 
-  componentDidUpdate() {
-    //the view registry could be changed after render update
-    //resetup remote views here
-    let remoteStreams = this.state.remoteStreams || [];
-    for (let i = 0; i < remoteStreams.length; i++) {
-      let stream = remoteStreams[i];
-      let { uid } = stream;
-      AgoraRtcEngine.setRemoteVideoView(this.viewRegistry[uid], uid, AgoraRtcEngine.AgoraVideoRenderModeFit)
-    }
-  }
-
-  // Agora Action 
-  _joinChannel() {
-    AgoraRtcEngine.setLocalVideoView(this.viewRegistry["local"], AgoraRtcEngine.AgoraVideoRenderModeFit);
-    AgoraRtcEngine.setChannelProfile(1);
-    AgoraRtcEngine.setClientRole(1);
-    AgoraRtcEngine.setVideoProfile(AgoraRtcEngine.AgoraVideoProfileDEFAULT, true);
-    AgoraRtcEngine.startPreview();
-    AgoraRtcEngine.joinChannel(null, "rnchannel01", "React Native for Agora RTC SDK", 0);
-  }
-
-  _leaveChannel() {
-    AgoraRtcEngine.stopPreview();
-    AgoraRtcEngine.leaveChannel();
-  }
-
-  _switchCamera() {
-    AgoraRtcEngine.switchCamera();
-  }
-
-  _switchAudio() {
-    AgoraRtcEngine.setEnableSpeakerphone(isSpeakerPhone);
-    isSpeakerPhone = !isSpeakerPhone;
-  }
-
-  // _startPublish() {
-  //   AgoraRtcEngine.addPublishStreamUrl(cdn_url, false)
+  // constructor()
+  // {
+  //   super();
+  //   this.state={
+  //     fontLoaded:false
+  //   }
   // }
-
-  // _stopPublish() {
-  //   AgoraRtcEngine.removePublishStreamUrl(cdn_url)
+  // async componentDidMount() {
+  //
+  //
+  //     await Font.loadAsync({
+  //       'GothamBold': require('./assets/fonts/GothamRoundedBold.ttf'),
+  //       'GothamMedium': require('./assets/fonts/GothamRoundedMedium.ttf'),
+  //     });
+  //     console.log("Font loading ......");
+  //     this.setState({fontLoaded:true})
+  //
   // }
 
   render() {
-    let remoteViews = this.state.remoteStreams.map(stream => {
-      let { uid } = stream;
-      return (
-        <AgoraRendererView
-          ref={component => this.viewRegistry[uid] = component}
-          key={uid}
-          style={{ width: 360, height: 240 }}
-        />
-      )
-    })
-    return (
-      <View style={styles.container} >
+      return(
+        
+            <AppContainer />
 
-        <AgoraRendererView key="local"
-          ref={component => this.viewRegistry["local"] = component}
-          style={{ width: 360, height: 240 }}
-        />
-        {remoteViews}
-        <View style={{ flexDirection: 'row' }}>
-          <Button style={{ flex: 1 }}
-            onPress={this._joinChannel.bind(this)}
-            title="Call In"
-            style={{ width: 180, float: "left", backgroundColor: "rgb(0,0,0)" }}
-            color="#841584"
-          />
-          <Button style={{ flex: 1 }}
-            onPress={this._leaveChannel.bind(this)}
-            title="End Call"
-            color="#841584"
-            style={{ width: 180, float: "left" }}
-          />
-        </View>
-
-        <View style={{ flexDirection: 'row' }}>
-          <Button
-            onPress={this._switchCamera.bind(this)}
-            title="Switch Camera"
-            color="#841584"
-          />
-          <Button
-            onPress={this._switchAudio.bind(this)}
-            title="Speaker"
-            color="#841584"
-          />
-        </View>
-
-        {/* <View style={{ flexDirection: 'row' }}>
-          <Button
-            onPress={this._startPublish.bind(this)}
-            title="Start publish"
-            color="#841584"
-          />
-          <Button
-            onPress={this._stopPublish.bind(this)}
-            title="Stop publish"
-            color="#841584"
-          />
-        </View> */}
-
-      </View>
-    );
+        )
+    }
   }
-
-  registerCallbacks() {
-    let listeners = this.listeners || [];
-    // Aogra CallBack
-    listeners.push(agoraKitEmitter.addListener(
-      'RemoteDidJoinedChannel',
-      (notify) => {
-        //update state
-        let remoteStreams = this.state.remoteStreams || [];
-        remoteStreams.push({ uid: notify.uid })
-        this.setState({ remoteStreams })
-      }
-    ));
-
-    listeners.push(agoraKitEmitter.addListener(
-      'RemoteDidOfflineOfUid',
-      (notify) => {
-        //remove stream and update state
-        let remoteStreams = this.state.remoteStreams || [];
-        remoteStreams = remoteStreams.filter(s => s.uid !== notify.uid)
-        this.setState({ remoteStreams })
-      }
-    ));
-
-    listeners.push(agoraKitEmitter.addListener(
-      'StreamPublished',
-      (notify) => {
-        console.log(`stream published ${notify.errorCode}`)
-      }
-    ));
-
-    listeners.push(agoraKitEmitter.addListener(
-      'StreamUnpublished',
-      (notify) => {
-        console.log(`stream unpublished`)
-      }
-    ));
-  }
-
-  componentWillUnmount() {
-    this.listeners.forEach(i => i.remove())
-  }
-
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-  thumbnail: {
-    width: 53,
-    height: 81,
-  },
-});
